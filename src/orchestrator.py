@@ -403,6 +403,9 @@ class HorizonOrchestrator:
 
         Falls back to returning items unchanged if the AI call fails.
         """
+        if not self.config.filtering.enable_topic_dedup:
+            return items
+
         if len(items) <= 1:
             return items
 
@@ -524,6 +527,9 @@ class HorizonOrchestrator:
             items: Important items to enrich (modified in-place)
         """
         if not items:
+            return
+        if not self.config.filtering.enable_enrichment:
+            self.console.print("Skipping enrichment to reduce AI calls\n")
             return
 
         self.console.print("📚 Enriching with background knowledge...")

@@ -8,6 +8,7 @@
     "max_tokens": 4096,
     "throttle_sec": 0,
     "analysis_concurrency": 1,
+    "analysis_batch_size": 1,
     "enrichment_concurrency": 1
   },
   "email": {
@@ -111,7 +112,10 @@
   },
   "filtering": {
     "ai_score_threshold": 6.0,
-    "time_window_hours": 24
+    "time_window_hours": 24,
+    "enable_topic_dedup": false,
+    "enable_enrichment": true,
+    "max_items_for_enrichment": 3
   },
   "webhook": {
     "enabled": false,

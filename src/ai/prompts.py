@@ -81,6 +81,31 @@ Respond with valid JSON only:
   "tags": ["<tag1>", "<tag2>", ...]
 }}"""
 
+CONTENT_ANALYSIS_BATCH_USER = """Analyze the following content items and provide a JSON response.
+
+For each item, return:
+- id: The exact item id from the input
+- score (0-10): Importance score
+- reason: Brief explanation for the score
+- summary: One-sentence summary of the content
+- tags: Relevant topic tags (3-5 tags)
+
+Items:
+{items}
+
+Respond with valid JSON only:
+{{
+  "analyses": [
+    {{
+      "id": "<item-id>",
+      "score": <number>,
+      "reason": "<explanation>",
+      "summary": "<one-sentence-summary>",
+      "tags": ["<tag1>", "<tag2>", "..."]
+    }}
+  ]
+}}"""
+
 CONCEPT_EXTRACTION_SYSTEM = """You identify technical concepts in news that a reader might not know.
 Given a news item, return 1-3 search queries for concepts that need explanation.
 Focus on: specific technologies, protocols, algorithms, tools, or projects that are not widely known.

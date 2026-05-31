@@ -1,6 +1,7 @@
 """RSS feed scraper implementation."""
 
 import calendar
+import asyncio
 import hashlib
 import logging
 import os
@@ -41,12 +42,23 @@ class RSSScraper(BaseScraper):
         items = []
         sources = self.config["sources"]
 
-        for source in sources:
-            if not source.enabled:
-                continue
+        enabled_sources = [source for source in sources if source.enabled]
+        concurrency = max(1, int(os.getenv("HORIZON_RSS_FETCH_CONCURRENCY", "16")))
+        semaphore = asyncio.Semaphore(concurrency)
 
-            feed_items = await self._fetch_feed(source, since)
-            items.extend(feed_items)
+        async def fetch_one(source: RSSSourceConfig) -> List[ContentItem]:
+            async with semaphore:
+                return await self._fetch_feed(source, since)
+
+        results = await asyncio.gather(
+            *(fetch_one(source) for source in enabled_sources),
+            return_exceptions=True,
+        )
+        for result in results:
+            if isinstance(result, Exception):
+                logger.warning("Error fetching RSS feed: %s", result)
+                continue
+            items.extend(result)
 
         return items
 

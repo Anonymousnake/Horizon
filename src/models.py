@@ -64,6 +64,7 @@ class AIConfig(BaseModel):
     max_tokens: int = 4096
     throttle_sec: float = 0.0
     analysis_concurrency: int = 1
+    analysis_batch_size: int = 1
     enrichment_concurrency: int = 1
     languages: List[str] = Field(default_factory=lambda: ["en"])
     # Azure OpenAI specific; required when provider == AZURE
@@ -314,6 +315,9 @@ class FilteringConfig(BaseModel):
 
     ai_score_threshold: float = 7.0
     time_window_hours: int = 24
+    enable_topic_dedup: bool = False
+    enable_enrichment: bool = False
+    max_items_for_enrichment: int = 3
 
 
 class Config(BaseModel):
