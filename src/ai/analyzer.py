@@ -179,6 +179,9 @@ class ContentAnalyzer:
             item.ai_reason = analysis.get("reason", "")
             item.ai_summary = analysis.get("summary", item.title)
             item.ai_tags = analysis.get("tags", [])
+            for key in ("title_zh", "detailed_summary_zh"):
+                if analysis.get(key):
+                    item.metadata[key] = analysis[key]
 
     @retry(
         stop=stop_after_attempt(3),

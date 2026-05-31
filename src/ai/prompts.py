@@ -89,6 +89,8 @@ For each item, return:
 - reason: Brief explanation for the score
 - summary: One-sentence summary of the content
 - tags: Relevant topic tags (3-5 tags)
+- title_zh: A concise Simplified Chinese title. Translate English titles naturally.
+- detailed_summary_zh: 1-2 Simplified Chinese sentences explaining what happened and why it matters.
 
 Items:
 {items}
@@ -101,7 +103,9 @@ Respond with valid JSON only:
       "score": <number>,
       "reason": "<explanation>",
       "summary": "<one-sentence-summary>",
-      "tags": ["<tag1>", "<tag2>", "..."]
+      "tags": ["<tag1>", "<tag2>", "..."],
+      "title_zh": "<简体中文标题>",
+      "detailed_summary_zh": "<1-2句简体中文摘要>"
     }}
   ]
 }}"""
