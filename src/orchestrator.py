@@ -94,6 +94,12 @@ class HorizonOrchestrator:
 
             # 5. Filter by score threshold
             threshold = self.config.filtering.ai_score_threshold
+            candidate_items = [
+                item for item in analyzed_items
+                if item.ai_score is not None
+            ]
+            candidate_items.sort(key=lambda x: x.ai_score or 0, reverse=True)
+
             important_items = [
                 item for item in analyzed_items
                 if item.ai_score and item.ai_score >= threshold
@@ -113,7 +119,21 @@ class HorizonOrchestrator:
                 )
             important_items = deduped_items
 
-            # 5.6 Optional semantic deduplication: drop items covering the same topic
+            # 5.6 Backfill after deduplication so a briefing does not shrink too much.
+            backfilled_items = self.backfill_unique_items(
+                selected=important_items,
+                candidates=candidate_items,
+                target_count=10,
+                min_score=max(0, threshold - 1),
+            )
+            if len(backfilled_items) > len(important_items):
+                self.console.print(
+                    f"➕ Backfilled {len(backfilled_items) - len(important_items)} unique items "
+                    f"→ {len(backfilled_items)} total items\n"
+                )
+            important_items = backfilled_items
+
+            # 5.7 Optional semantic deduplication: drop items covering the same topic
             deduped_items = await self.merge_topic_duplicates(important_items)
             if len(deduped_items) < len(important_items):
                 self.console.print(
@@ -122,7 +142,7 @@ class HorizonOrchestrator:
                 )
             important_items = deduped_items
 
-            # 5.7 Optional second-stage Twitter reply expansion + targeted re-analysis
+            # 5.8 Optional second-stage Twitter reply expansion + targeted re-analysis
             await self._expand_twitter_discussion(important_items)
 
             # Show per-sub-source selection breakdown
@@ -433,6 +453,33 @@ class HorizonOrchestrator:
             )
 
         return merged
+
+    def backfill_unique_items(
+        self,
+        selected: List[ContentItem],
+        candidates: List[ContentItem],
+        target_count: int,
+        min_score: float,
+    ) -> List[ContentItem]:
+        """Append lower-scored unique candidates after deduplication."""
+        if len(selected) >= target_count:
+            return selected
+
+        result = list(selected)
+        selected_ids = {item.id for item in result}
+        for candidate in candidates:
+            if len(result) >= target_count:
+                break
+            if candidate.id in selected_ids:
+                continue
+            if candidate.ai_score is None or candidate.ai_score < min_score:
+                continue
+            if any(self._looks_like_same_event(existing, candidate) for existing in result):
+                continue
+            result.append(candidate)
+            selected_ids.add(candidate.id)
+
+        return result
 
     @staticmethod
     def _headline_variants(item: ContentItem) -> List[str]:
