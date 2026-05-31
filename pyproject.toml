@@ -20,6 +20,7 @@ dependencies = [
     "beautifulsoup4>=4.12.0",
     "markdown>=3.10.2",
     "mcp>=1.0.0",
+    "pillow>=10.4.0",
 ]
 
 [project.optional-dependencies]
@@ -37,6 +38,7 @@ horizon = "src.main:main"
 horizon-mcp = "src.mcp.server:main"
 horizon-wizard = "src.setup.wizard:main"
 horizon-webhook = "src.services.webhook_cli:main"
+horizon-send-image = "src.services.qq_image_cli:main"
 
 [build-system]
 requires = ["hatchling"]

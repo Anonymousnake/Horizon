@@ -8,6 +8,7 @@ from urllib.parse import urlsplit, urlunsplit
 from datetime import datetime, timezone
 from typing import Any, List, Optional, Union, cast
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 import httpx
 
 from ..ai.markdown_utils import clean_app_summary_markdown
@@ -15,6 +16,7 @@ from ..models import ContentItem, WebhookConfig
 from ..ai.summarizer import DailySummarizer
 
 logger = logging.getLogger(__name__)
+BEIJING_TZ = ZoneInfo("Asia/Shanghai")
 
 
 # Pattern: #{key} or #{key?param1=val1&param2=val2}
@@ -126,6 +128,60 @@ def _prepare_variables_for_body(
     prepared = dict(variables)
     prepared["summary"] = _format_markdown_for_webhook(str(variables["summary"]))
     return prepared
+
+
+def _compact_ws(value: Any) -> str:
+    """Collapse whitespace for chat-friendly plain text."""
+    return re.sub(r"\s+", " ", str(value or "")).strip()
+
+
+def _format_qq_briefing(
+    important_items: List[ContentItem],
+    all_items_count: int,
+    date: str,
+    lang: str,
+) -> str:
+    """Build a plain-text briefing for QQ/OneBot messages."""
+    title = "Horizon 每日速递" if lang == "zh" else "Horizon Daily"
+    lines = [
+        f"{title} | {date}",
+        f"从 {all_items_count} 条内容中精选 {len(important_items)} 条",
+        "",
+    ]
+
+    for index, item in enumerate(important_items, start=1):
+        meta = item.metadata or {}
+        item_title = _compact_ws(meta.get(f"title_{lang}") or item.title)
+        summary = _compact_ws(
+            meta.get(f"detailed_summary_{lang}")
+            or meta.get("detailed_summary")
+            or item.ai_summary
+            or ""
+        )
+        source = _compact_ws(meta.get("feed_name") or item.author or item.source_type.value)
+        if item.published_at:
+            published = item.published_at.astimezone(BEIJING_TZ).strftime("%m-%d %H:%M")
+        else:
+            published = ""
+        tags = " ".join(f"#{_compact_ws(tag)}" for tag in (item.ai_tags or [])[:4])
+        source_line = f"来源：{source}"
+        if published:
+            source_line += f" · {published}"
+
+        lines.extend(
+            [
+                f"{index}. {item_title}  ⭐ {item.ai_score or '?'}/10",
+                source_line,
+            ]
+        )
+        if summary:
+            lines.append(f"摘要：{summary}")
+        lines.append(f"链接：{item.url}")
+        if tags:
+            lines.append(f"标签：{tags}")
+        lines.append("")
+
+    return "\n".join(lines).strip()
 
 
 def _isjson(s: str) -> bool:

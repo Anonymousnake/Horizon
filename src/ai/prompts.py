@@ -39,6 +39,7 @@ Score content on a 0-10 scale based on importance and relevance:
 - Incremental improvements
 - Useful tutorials
 - Moderate community interest
+- Useful daily-briefing items that are not major breakthroughs but are worth a quick read
 
 **3-4: Low Priority** - Generic or routine content
 - Minor updates
@@ -57,6 +58,8 @@ Consider:
 - Relevance to software engineering, AI/ML, and systems research
 - Community discussion quality: insightful comments, diverse viewpoints, and debates increase value
 - Engagement signals: high upvotes/favorites with substantive discussion indicate community-validated importance
+
+For a daily briefing, calibrate scores so that a normal 200-300 item input batch usually has about 10-15 items scoring 5 or above when there is enough decent material. Prefer diversity across AI, technology, business, finance, developer tools, games, China/domestic policy, and international affairs. Do not reserve 5+ only for major breaking news; use 5-6 for solid "worth reading" items.
 """
 
 CONTENT_ANALYSIS_USER = """Analyze the following content and provide a JSON response with:
