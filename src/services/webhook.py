@@ -190,7 +190,7 @@ def _extract_headers(headers_str: Optional[str]) -> dict:
         if len(parts) != 2:
             logger.warning("Invalid webhook header line: %s", line)
             continue
-        k, v = parts[0].strip(), parts[1].strip()
+        k, v = parts[0].strip(), os.path.expandvars(parts[1].strip())
         headers[k] = v
 
     return headers
