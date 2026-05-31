@@ -461,9 +461,46 @@ class HorizonOrchestrator:
             [
                 item.ai_summary or "",
                 str(item.metadata.get("detailed_summary_zh") or ""),
+                " ".join(item.ai_tags),
             ]
         )
         return cls._tokenize_event_text(" ".join(pieces))
+
+    @classmethod
+    def _signature_tokens(cls, item: ContentItem) -> set[str]:
+        text = " ".join(
+            cls._headline_variants(item)
+            + [
+                item.ai_summary or "",
+                str(item.metadata.get("detailed_summary_zh") or ""),
+                " ".join(item.ai_tags),
+            ]
+        ).lower()
+
+        signatures = set()
+        synonym_patterns = {
+            "softbank": [r"softbank", r"软银"],
+            "france": [r"france", r"french", r"法国"],
+            "ai": [r"\bai\b", r"artificial intelligence", r"人工智能", r"智能"],
+            "datacenter": [r"data centers?", r"数据中心", r"计算集群", r"算力集群", r"基础设施", r"设施"],
+            "invest": [r"invest", r"investment", r"投资", r"斥资", r"投入", r"承诺"],
+            "spacex": [r"spacex"],
+            "ipo": [r"\bipo\b", r"上市"],
+            "xrp": [r"\bxrp\b"],
+            "defi": [r"\bdefi\b"],
+            "california": [r"california", r"加州"],
+            "gaming": [r"gaming", r"games?", r"游戏"],
+            "byd": [r"\bbyd\b", r"比亚迪"],
+            "anthropic": [r"anthropic"],
+            "google": [r"google", r"谷歌"],
+        }
+        for token, patterns in synonym_patterns.items():
+            if any(re.search(pattern, text) for pattern in patterns):
+                signatures.add(token)
+
+        signatures.update(tag.lower() for tag in item.ai_tags if len(tag) >= 3)
+        signatures.update(re.findall(r"\d+(?:\.\d+)?", text))
+        return signatures
 
     @classmethod
     def _headline_tokens(cls, item: ContentItem) -> set[str]:
@@ -524,7 +561,13 @@ class HorizonOrchestrator:
             return True
 
         token_score = cls._token_similarity(left, right)
-        return token_score >= 0.56 and bool(shared_numbers or shared_tags)
+        if token_score >= 0.56 and bool(shared_numbers or shared_tags):
+            return True
+
+        shared_signatures = cls._signature_tokens(left) & cls._signature_tokens(right)
+        generic_signatures = {"ai", "gaming", "news", "technology", "tech"}
+        strong_signatures = shared_signatures - generic_signatures
+        return len(strong_signatures) >= 3 and bool(shared_tags or shared_numbers)
 
     @staticmethod
     def _merge_duplicate_item(primary: ContentItem, duplicate: ContentItem) -> None:
