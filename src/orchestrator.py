@@ -1,6 +1,8 @@
 """Main orchestrator coordinating the entire workflow."""
 
 import asyncio
+import re
+from difflib import SequenceMatcher
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict
@@ -102,7 +104,16 @@ class HorizonOrchestrator:
                 f"⭐️ {len(important_items)} items scored ≥ {threshold}\n"
             )
 
-            # 5.5 Semantic deduplication: drop items covering the same topic
+            # 5.5 Fast local deduplication: drop obvious same-event duplicates.
+            deduped_items = self.merge_similar_headline_duplicates(important_items)
+            if len(deduped_items) < len(important_items):
+                self.console.print(
+                    f"🧹 Removed {len(important_items) - len(deduped_items)} local headline duplicates "
+                    f"→ {len(deduped_items)} unique items\n"
+                )
+            important_items = deduped_items
+
+            # 5.6 Optional semantic deduplication: drop items covering the same topic
             deduped_items = await self.merge_topic_duplicates(important_items)
             if len(deduped_items) < len(important_items):
                 self.console.print(
@@ -111,7 +122,7 @@ class HorizonOrchestrator:
                 )
             important_items = deduped_items
 
-            # 5.6 Optional second-stage Twitter reply expansion + targeted re-analysis
+            # 5.7 Optional second-stage Twitter reply expansion + targeted re-analysis
             await self._expand_twitter_discussion(important_items)
 
             # Show per-sub-source selection breakdown
@@ -390,6 +401,132 @@ class HorizonOrchestrator:
             merged.append(primary)
 
         return merged
+
+    def merge_similar_headline_duplicates(self, items: List[ContentItem]) -> List[ContentItem]:
+        """Merge obvious same-event duplicates without an additional AI call.
+
+        RSS packs often contain the same event from multiple outlets. URL
+        deduplication cannot catch that, and running semantic dedup for every
+        briefing is expensive. This pass is deliberately conservative: it only
+        merges items with highly similar translated/original headlines, or
+        strong headline/summary token overlap plus shared numbers or tags.
+        """
+        if len(items) <= 1:
+            return items
+
+        merged: List[ContentItem] = []
+        for item in items:
+            duplicate_of: ContentItem | None = None
+            for primary in merged:
+                if self._looks_like_same_event(primary, item):
+                    duplicate_of = primary
+                    break
+
+            if duplicate_of is None:
+                merged.append(item)
+                continue
+
+            self._merge_duplicate_item(duplicate_of, item)
+            self.console.print(
+                f"   [dim]local dedup: keep {duplicate_of.metadata.get('title_zh') or duplicate_of.title}[/dim]\n"
+                f"   [dim]             drop {item.metadata.get('title_zh') or item.title}[/dim]"
+            )
+
+        return merged
+
+    @staticmethod
+    def _headline_variants(item: ContentItem) -> List[str]:
+        variants = [
+            str(item.metadata.get("title_zh") or ""),
+            item.title or "",
+        ]
+        return [text for text in variants if text.strip()]
+
+    @staticmethod
+    def _normalize_headline(text: str) -> str:
+        return re.sub(r"[^0-9a-zA-Z\u4e00-\u9fff]+", "", text).lower()
+
+    @staticmethod
+    def _tokenize_event_text(text: str) -> set[str]:
+        text = text.lower()
+        tokens = set(re.findall(r"[a-z0-9]{2,}", text))
+        for chunk in re.findall(r"[\u4e00-\u9fff]{2,}", text):
+            tokens.update(chunk[i : i + 2] for i in range(len(chunk) - 1))
+        return tokens
+
+    @classmethod
+    def _event_tokens(cls, item: ContentItem) -> set[str]:
+        pieces = cls._headline_variants(item)
+        pieces.extend(
+            [
+                item.ai_summary or "",
+                str(item.metadata.get("detailed_summary_zh") or ""),
+            ]
+        )
+        return cls._tokenize_event_text(" ".join(pieces))
+
+    @classmethod
+    def _title_similarity(cls, left: ContentItem, right: ContentItem) -> float:
+        best = 0.0
+        for left_title in cls._headline_variants(left):
+            left_norm = cls._normalize_headline(left_title)
+            if len(left_norm) < 6:
+                continue
+            for right_title in cls._headline_variants(right):
+                right_norm = cls._normalize_headline(right_title)
+                if len(right_norm) < 6:
+                    continue
+                best = max(best, SequenceMatcher(None, left_norm, right_norm).ratio())
+        return best
+
+    @classmethod
+    def _token_similarity(cls, left: ContentItem, right: ContentItem) -> float:
+        left_tokens = cls._event_tokens(left)
+        right_tokens = cls._event_tokens(right)
+        if not left_tokens or not right_tokens:
+            return 0.0
+        overlap = len(left_tokens & right_tokens)
+        return 2 * overlap / (len(left_tokens) + len(right_tokens))
+
+    @classmethod
+    def _looks_like_same_event(cls, left: ContentItem, right: ContentItem) -> bool:
+        if cls._title_similarity(left, right) >= 0.72:
+            return True
+
+        if cls._token_similarity(left, right) < 0.56:
+            return False
+
+        left_text = " ".join(cls._headline_variants(left))
+        right_text = " ".join(cls._headline_variants(right))
+        shared_numbers = set(re.findall(r"\d+(?:\.\d+)?", left_text)) & set(
+            re.findall(r"\d+(?:\.\d+)?", right_text)
+        )
+        shared_tags = {tag.lower() for tag in left.ai_tags} & {
+            tag.lower() for tag in right.ai_tags
+        }
+        return bool(shared_numbers or shared_tags)
+
+    @staticmethod
+    def _merge_duplicate_item(primary: ContentItem, duplicate: ContentItem) -> None:
+        sources = set(primary.metadata.get("merged_sources", []))
+        sources.add(primary.source_type.value)
+        sources.add(duplicate.source_type.value)
+        primary.metadata["merged_sources"] = sorted(sources)
+
+        feed_names = set(primary.metadata.get("merged_feed_names", []))
+        for item in (primary, duplicate):
+            if feed_name := item.metadata.get("feed_name"):
+                feed_names.add(str(feed_name))
+        if feed_names:
+            primary.metadata["merged_feed_names"] = sorted(feed_names)
+
+        for key, value in duplicate.metadata.items():
+            if key not in primary.metadata or not primary.metadata[key]:
+                primary.metadata[key] = value
+
+        if duplicate.content and duplicate.content not in (primary.content or ""):
+            label = duplicate.metadata.get("feed_name") or duplicate.source_type.value
+            primary.content = (primary.content or "") + f"\n\n--- From {label} ---\n{duplicate.content}"
 
     async def merge_topic_duplicates(self, items: List[ContentItem]) -> List[ContentItem]:
         """Merge items covering the same topic using AI semantic deduplication.
