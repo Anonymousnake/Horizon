@@ -1,0 +1,740 @@
+[
+  {
+    "name": "CNBC Finance",
+    "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664",
+    "enabled": true,
+    "category": "金融财经"
+  },
+  {
+    "name": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/news/rssindex",
+    "enabled": true,
+    "category": "金融财经"
+  },
+  {
+    "name": "FT中文网",
+    "url": "https://www.ftchinese.com/rss/news",
+    "enabled": true,
+    "category": "金融财经"
+  },
+  {
+    "name": "界面新闻-金融",
+    "url": "https://a.jiemian.com/index.php?m=article&a=rss&cid=4",
+    "enabled": true,
+    "category": "金融财经"
+  },
+  {
+    "name": "CoinDesk",
+    "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+    "enabled": true,
+    "category": "金融财经"
+  },
+  {
+    "name": "Investing.com News",
+    "url": "https://www.investing.com/rss/news.rss",
+    "enabled": true,
+    "category": "金融财经"
+  },
+  {
+    "name": "Quartz",
+    "url": "https://qz.com/feed",
+    "enabled": true,
+    "category": "金融财经"
+  },
+  {
+    "name": "The Economist",
+    "url": "https://www.economist.com/the-world-this-week/rss.xml",
+    "enabled": true,
+    "category": "金融财经"
+  },
+  {
+    "name": "WSJ Markets",
+    "url": "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",
+    "enabled": true,
+    "category": "金融财经"
+  },
+  {
+    "name": "The Verge",
+    "url": "https://www.theverge.com/rss/index.xml",
+    "enabled": true,
+    "category": "全球科技"
+  },
+  {
+    "name": "TechCrunch",
+    "url": "https://techcrunch.com/feed/",
+    "enabled": true,
+    "category": "全球科技"
+  },
+  {
+    "name": "Wired",
+    "url": "https://www.wired.com/feed/rss",
+    "enabled": true,
+    "category": "全球科技"
+  },
+  {
+    "name": "Ars Technica",
+    "url": "https://feeds.arstechnica.com/arstechnica/index",
+    "enabled": true,
+    "category": "全球科技"
+  },
+  {
+    "name": "The Next Web",
+    "url": "https://thenextweb.com/feed",
+    "enabled": true,
+    "category": "全球科技"
+  },
+  {
+    "name": "Engadget 中国版",
+    "url": "https://chinese.engadget.com/rss.xml",
+    "enabled": true,
+    "category": "全球科技"
+  },
+  {
+    "name": "36氪 36Kr",
+    "url": "https://36kr.com/feed",
+    "enabled": true,
+    "category": "国内科技"
+  },
+  {
+    "name": "Solidot",
+    "url": "https://www.solidot.org/index.rss",
+    "enabled": true,
+    "category": "国内科技"
+  },
+  {
+    "name": "爱范儿 ifanr",
+    "url": "https://www.ifanr.com/feed",
+    "enabled": true,
+    "category": "国内科技"
+  },
+  {
+    "name": "月光博客",
+    "url": "https://www.williamlong.info/rss.xml",
+    "enabled": true,
+    "category": "国内科技"
+  },
+  {
+    "name": "New York Times",
+    "url": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+    "enabled": true,
+    "category": "国际新闻"
+  },
+  {
+    "name": "BBC News",
+    "url": "http://feeds.bbci.co.uk/news/rss.xml",
+    "enabled": true,
+    "category": "国际新闻"
+  },
+  {
+    "name": "NPR News",
+    "url": "https://feeds.npr.org/1001/rss.xml",
+    "enabled": true,
+    "category": "国际新闻"
+  },
+  {
+    "name": "GitHub Blog",
+    "url": "https://github.blog/feed/",
+    "enabled": true,
+    "category": "编程开发"
+  },
+  {
+    "name": "Stack Overflow Blog",
+    "url": "https://stackoverflow.blog/feed/",
+    "enabled": true,
+    "category": "编程开发"
+  },
+  {
+    "name": "Real Python",
+    "url": "https://realpython.com/atom.xml",
+    "enabled": true,
+    "category": "编程开发"
+  },
+  {
+    "name": "Martin Fowler",
+    "url": "https://martinfowler.com/feed.atom",
+    "enabled": true,
+    "category": "编程开发"
+  },
+  {
+    "name": "Netflix TechBlog",
+    "url": "https://netflixtechblog.com/feed",
+    "enabled": true,
+    "category": "编程开发"
+  },
+  {
+    "name": "CSS-Tricks",
+    "url": "https://css-tricks.com/feed/",
+    "enabled": true,
+    "category": "编程开发"
+  },
+  {
+    "name": "Go Blog",
+    "url": "https://go.dev/blog/feed.atom",
+    "enabled": true,
+    "category": "编程开发"
+  },
+  {
+    "name": "Rust Blog",
+    "url": "https://blog.rust-lang.org/feed.xml",
+    "enabled": true,
+    "category": "编程开发"
+  },
+  {
+    "name": "FreeCodeCamp",
+    "url": "https://www.freecodecamp.org/news/rss/",
+    "enabled": true,
+    "category": "编程开发"
+  },
+  {
+    "name": "OpenAI Blog",
+    "url": "https://openai.com/blog/rss.xml",
+    "enabled": true,
+    "category": "人工智能"
+  },
+  {
+    "name": "MIT Tech Review",
+    "url": "https://www.technologyreview.com/feed/",
+    "enabled": true,
+    "category": "人工智能"
+  },
+  {
+    "name": "VentureBeat",
+    "url": "https://venturebeat.com/feed/",
+    "enabled": true,
+    "category": "人工智能"
+  },
+  {
+    "name": "Hugging Face",
+    "url": "https://huggingface.co/blog/feed.xml",
+    "enabled": true,
+    "category": "人工智能"
+  },
+  {
+    "name": "Google AI Blog",
+    "url": "http://googleaiblog.blogspot.com/atom.xml",
+    "enabled": true,
+    "category": "人工智能"
+  },
+  {
+    "name": "Smashing Magazine",
+    "url": "https://www.smashingmagazine.com/feed/",
+    "enabled": true,
+    "category": "设计与产品"
+  },
+  {
+    "name": "Sidebar.io",
+    "url": "https://sidebar.io/feed.xml",
+    "enabled": true,
+    "category": "设计与产品"
+  },
+  {
+    "name": "A List Apart",
+    "url": "https://alistapart.com/main/feed",
+    "enabled": true,
+    "category": "设计与产品"
+  },
+  {
+    "name": "Nielsen Norman Group",
+    "url": "https://www.nngroup.com/feed/rss/",
+    "enabled": true,
+    "category": "设计与产品"
+  },
+  {
+    "name": "Muzli",
+    "url": "https://medium.com/feed/muzli-design-inspiration",
+    "enabled": true,
+    "category": "设计与产品"
+  },
+  {
+    "name": "Figma Blog",
+    "url": "https://www.figma.com/blog/feed/atom.xml",
+    "enabled": true,
+    "category": "设计与产品"
+  },
+  {
+    "name": "机核网 GCORES",
+    "url": "https://www.gcores.com/rss",
+    "enabled": true,
+    "category": "游戏娱乐"
+  },
+  {
+    "name": "Daring Fireball",
+    "url": "https://daringfireball.net/feeds/main",
+    "enabled": true,
+    "category": "数码设备"
+  },
+  {
+    "name": "9to5Mac",
+    "url": "https://9to5mac.com/feed/",
+    "enabled": true,
+    "category": "数码设备"
+  },
+  {
+    "name": "Android Police",
+    "url": "https://www.androidpolice.com/feed/",
+    "enabled": true,
+    "category": "数码设备"
+  },
+  {
+    "name": "Lifehacker",
+    "url": "https://lifehacker.com/rss",
+    "enabled": true,
+    "category": "生活效率"
+  },
+  {
+    "name": "Mashable",
+    "url": "https://mashable.com/feed",
+    "enabled": true,
+    "category": "生活效率"
+  },
+  {
+    "name": "小众软件",
+    "url": "https://www.appinn.com/feed/",
+    "enabled": true,
+    "category": "软件应用"
+  },
+  {
+    "name": "奔跑中的奶酪",
+    "url": "https://www.runningcheese.com/feed",
+    "enabled": true,
+    "category": "软件应用"
+  },
+  {
+    "name": "Playbook",
+    "url": "https://rss.politico.com/playbook.xml",
+    "enabled": true,
+    "category": "United States"
+  },
+  {
+    "name": "FOX News",
+    "url": "http://feeds.foxnews.com/foxnews/latest",
+    "enabled": true,
+    "category": "United States"
+  },
+  {
+    "name": "Yahoo News - Latest News & Headlines",
+    "url": "https://news.yahoo.com/rss/mostviewed",
+    "enabled": true,
+    "category": "United States"
+  },
+  {
+    "name": "World News - Breaking News, Top Stories",
+    "url": "https://www.huffpost.com/section/world-news/feed",
+    "enabled": true,
+    "category": "United States"
+  },
+  {
+    "name": "巴哈姆特 GNN",
+    "url": "https://gnn.gamer.com.tw/rss.xml",
+    "enabled": true,
+    "category": "游戏娱乐"
+  },
+  {
+    "name": "触乐 ChuApp",
+    "url": "http://www.chuapp.com/feed",
+    "enabled": true,
+    "category": "游戏娱乐"
+  },
+  {
+    "name": "少数派",
+    "url": "https://sspai.com/feed",
+    "enabled": true,
+    "category": "软件应用"
+  },
+  {
+    "name": "IGN",
+    "url": "http://feeds.ign.com/ign/news",
+    "enabled": true,
+    "category": "游戏娱乐"
+  },
+  {
+    "name": "Eurogamer",
+    "url": "https://www.eurogamer.net/?format=rss",
+    "enabled": true,
+    "category": "游戏娱乐"
+  },
+  {
+    "name": "Kotaku",
+    "url": "https://kotaku.com/rss",
+    "enabled": true,
+    "category": "游戏娱乐"
+  },
+  {
+    "name": "PC Gamer",
+    "url": "https://www.pcgamer.com/rss",
+    "enabled": true,
+    "category": "游戏娱乐"
+  },
+  {
+    "name": "Rock Paper Shotgun",
+    "url": "https://www.rockpapershotgun.com/feed/",
+    "enabled": true,
+    "category": "游戏娱乐"
+  },
+  {
+    "name": "Steam News",
+    "url": "https://store.steampowered.com/feeds/news.xml",
+    "enabled": true,
+    "category": "游戏娱乐"
+  },
+  {
+    "name": "阮一峰的网络日志",
+    "url": "http://www.ruanyifeng.com/blog/atom.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "酷壳 CoolShell",
+    "url": "https://coolshell.cn/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "槽边往事",
+    "url": "https://www.bitinn.net/feed/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "可能吧",
+    "url": "https://kenengba.com/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Livid",
+    "url": "https://livid.v2ex.com/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Matrix67",
+    "url": "http://www.matrix67.com/blog/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "DIYgod",
+    "url": "https://diygod.cc/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Paul的博客",
+    "url": "https://paugram.com/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "土木坛子",
+    "url": "https://tumutanzi.com/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Randy's Blog",
+    "url": "https://lutaonan.com/rss.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Nova Kwok",
+    "url": "https://nova.moe/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Kaichao You",
+    "url": "https://youkaichao.github.io/feed.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "HelloDog",
+    "url": "https://wsgzao.github.io/atom.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "莫尔索",
+    "url": "https://liduos.com/atom.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Qborfy知识库",
+    "url": "https://qborfy.com/atom.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "硕鼠的博客站",
+    "url": "http://lukefan.com/?feed=rss2",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "seisamuse",
+    "url": "https://www.seis-jun.xyz/atom.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "费照君个人网站",
+    "url": "https://feizhaojun.com/?feed=rss2",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "bboysoul的博客",
+    "url": "https://www.bboy.app/atom.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "张洪Heo",
+    "url": "https://blog.zhheo.com/rss.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Tony Bai",
+    "url": "http://feed.tonybai.com/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "晓空blog",
+    "url": "https://blog.moeworld.tech/feed/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Laike9m's blog",
+    "url": "https://laike9m.com/blog/rss/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Innomad一挪迈",
+    "url": "https://innomad.io/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "南蛮子懋和",
+    "url": "https://www.dao.js.cn/feed.php",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "OneCoder的博客",
+    "url": "https://www.coderli.com/feed.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "菲兹克斯喵",
+    "url": "https://physnya.top/atom.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "WSH",
+    "url": "https://www.wsh233.cn/feed.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "s22y",
+    "url": "https://blog.s22y.moe/rss.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "蒙需",
+    "url": "https://jiangcl.com/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "王圆圆",
+    "url": "https://www.iconpik.com/rss/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "阮一峰的网络日志",
+    "url": "http://feeds.feedburner.com/ruanyifeng",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "云风的 BLOG",
+    "url": "http://blog.codingnow.com/atom.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "全栈应用开发:精益实践",
+    "url": "https://www.phodal.com/blog/feeds/rss/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "云原生",
+    "url": "https://jimmysong.io/index.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "夜行人",
+    "url": "https://wwj718.github.io/index.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "KAIX.IN",
+    "url": "https://kaix.in/feed/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "卢昌海的个人主页",
+    "url": "https://www.changhai.org/feed.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "游魂博客",
+    "url": "https://www.iyouhun.com/rss.php",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "文艺数学君",
+    "url": "https://mathpretty.com/feed/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Eric's Blog",
+    "url": "https://wsdjeg.net/feed.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "懒得勤快的博客",
+    "url": "https://masuit.com/rss",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "游戏研究社",
+    "url": "https://www.yystv.cn/rss/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "祝融说",
+    "url": "https://zhurongshuo.com/index.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "福强说 一个架构士的思考与沉淀",
+    "url": "https://afoo.me/feeds.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "程序员充电站",
+    "url": "https://itcharge.cn/feed/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "竹林里有冰的博客",
+    "url": "https://zhul.in/rss.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "conge",
+    "url": "https://conge.github.io/feed.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Mephisto's blog",
+    "url": "https://mephisto.cc/index.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Jing Blog",
+    "url": "https://jingine.com/feed/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "万圣节恶魔的领地",
+    "url": "https://cytrogen.icu/atom.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "obaby@mars",
+    "url": "https://h4ck.org.cn/feed/",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "柴郡猫",
+    "url": "https://www.cheshirex.com/feed",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "重生云",
+    "url": "https://xiaochopin.github.io/feed.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Mox的笔记库",
+    "url": "https://mocusez.site/zh-CN/atom.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "粥里有勺糖",
+    "url": "https://sugarat.top/feed.rss",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "椒盐豆豉",
+    "url": "https://blog.douchi.space/index.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "data4fun",
+    "url": "https://data4fun.cc/index.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "Taxodium",
+    "url": "https://taxodium.ink/rss.xml",
+    "enabled": true,
+    "category": "中文博客"
+  },
+  {
+    "name": "独元殇",
+    "url": "https://www.ccgxk.com/rss.php",
+    "enabled": true,
+    "category": "中文博客"
+  }
+]
