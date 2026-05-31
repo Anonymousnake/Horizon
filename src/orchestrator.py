@@ -466,6 +466,10 @@ class HorizonOrchestrator:
         return cls._tokenize_event_text(" ".join(pieces))
 
     @classmethod
+    def _headline_tokens(cls, item: ContentItem) -> set[str]:
+        return cls._tokenize_event_text(" ".join(cls._headline_variants(item)))
+
+    @classmethod
     def _title_similarity(cls, left: ContentItem, right: ContentItem) -> float:
         best = 0.0
         for left_title in cls._headline_variants(left):
@@ -489,12 +493,19 @@ class HorizonOrchestrator:
         return 2 * overlap / (len(left_tokens) + len(right_tokens))
 
     @classmethod
-    def _looks_like_same_event(cls, left: ContentItem, right: ContentItem) -> bool:
-        if cls._title_similarity(left, right) >= 0.72:
-            return True
+    def _headline_token_similarity(cls, left: ContentItem, right: ContentItem) -> float:
+        left_tokens = cls._headline_tokens(left)
+        right_tokens = cls._headline_tokens(right)
+        if not left_tokens or not right_tokens:
+            return 0.0
+        overlap = len(left_tokens & right_tokens)
+        return 2 * overlap / (len(left_tokens) + len(right_tokens))
 
-        if cls._token_similarity(left, right) < 0.56:
-            return False
+    @classmethod
+    def _looks_like_same_event(cls, left: ContentItem, right: ContentItem) -> bool:
+        title_score = cls._title_similarity(left, right)
+        if title_score >= 0.72:
+            return True
 
         left_text = " ".join(cls._headline_variants(left))
         right_text = " ".join(cls._headline_variants(right))
@@ -504,7 +515,16 @@ class HorizonOrchestrator:
         shared_tags = {tag.lower() for tag in left.ai_tags} & {
             tag.lower() for tag in right.ai_tags
         }
-        return bool(shared_numbers or shared_tags)
+
+        if title_score >= 0.66 and shared_numbers and shared_tags:
+            return True
+
+        headline_token_score = cls._headline_token_similarity(left, right)
+        if headline_token_score >= 0.54 and (shared_numbers or shared_tags):
+            return True
+
+        token_score = cls._token_similarity(left, right)
+        return token_score >= 0.56 and bool(shared_numbers or shared_tags)
 
     @staticmethod
     def _merge_duplicate_item(primary: ContentItem, duplicate: ContentItem) -> None:
