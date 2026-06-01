@@ -31,6 +31,7 @@ LINE = "#e6eaf2"
 
 @dataclass
 class BriefItem:
+    category: str
     title: str
     score: str
     url: str
@@ -63,6 +64,7 @@ def _load_fonts() -> dict[str, ImageFont.ImageFont]:
     return {
         "title": _font(cjk_bold, 42),
         "subtitle": _font(cjk, 24),
+        "category": _font(cjk_bold, 32),
         "item_title": _font(cjk_bold, 30),
         "body": _font(cjk, 25),
         "meta": _font(cjk, 21),
@@ -93,10 +95,36 @@ def _parse_summary(path: Path) -> tuple[str, str, list[BriefItem]]:
     subtitle = next((_clean(line) for line in lines if line.startswith(">")), "")
 
     items: list[BriefItem] = []
-    sections = re.split(r"\n---\n", text)
-    for section in sections:
-        if "\n## [" not in section and not section.startswith("## ["):
+    current_category = "今日要闻"
+    sections: list[tuple[str, str]] = []
+    section_lines: list[str] = []
+    in_details = False
+    in_item = False
+    for line in lines:
+        if line == "---":
+            in_details = True
+            if in_item and section_lines:
+                sections.append((current_category, "\n".join(section_lines)))
+            section_lines = []
+            in_item = False
             continue
+        if not in_details:
+            continue
+        if line.startswith("## ") and not line.startswith("## ["):
+            current_category = _clean(line.lstrip("# "))
+            continue
+        if line.startswith("## ["):
+            if in_item and section_lines:
+                sections.append((current_category, "\n".join(section_lines)))
+            section_lines = [line]
+            in_item = True
+            continue
+        if in_item:
+            section_lines.append(line)
+    if in_item and section_lines:
+        sections.append((current_category, "\n".join(section_lines)))
+
+    for category, section in sections:
         m = re.search(r"## \[([^\]]+)\]\(([^)]+)\)\s*⭐️?\s*([\d.]+/\d+)", section)
         if not m:
             continue
@@ -118,6 +146,7 @@ def _parse_summary(path: Path) -> tuple[str, str, list[BriefItem]]:
                 summary = _clean(line)
         items.append(
             BriefItem(
+                category=category,
                 title=_clean(raw_title),
                 score=score,
                 url=url,
@@ -176,7 +205,11 @@ def render_image(summary_path: Path, output_path: Path) -> Path:
     card_width = WIDTH - MARGIN * 2
 
     height = MARGIN + 86 + 34 + 28
+    last_category = None
     for item in items:
+        if item.category != last_category:
+            height += 58
+            last_category = item.category
         height += _measure_item(draw, item, fonts, card_width) + 20
     height += MARGIN
 
@@ -188,7 +221,16 @@ def render_image(summary_path: Path, output_path: Path) -> Path:
     draw.text((MARGIN, y), subtitle, font=fonts["subtitle"], fill=MUTED)
     y += 58
 
+    last_category = None
     for index, item in enumerate(items, start=1):
+        if item.category != last_category:
+            draw.text((MARGIN, y), item.category, font=fonts["category"], fill=TEXT)
+            count = sum(1 for candidate in items if candidate.category == item.category)
+            count_text = f"{count} 条"
+            count_w = draw.textlength(count_text, font=fonts["meta"])
+            draw.text((WIDTH - MARGIN - count_w, y + 8), count_text, font=fonts["meta"], fill=MUTED)
+            y += 50
+            last_category = item.category
         card_h = _measure_item(draw, item, fonts, card_width)
         x = MARGIN
         draw.rounded_rectangle((x, y, x + card_width, y + card_h), radius=22, fill=CARD)

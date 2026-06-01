@@ -100,15 +100,17 @@ class HorizonOrchestrator:
             ]
             candidate_items.sort(key=lambda x: x.ai_score or 0, reverse=True)
 
-            important_items = [
-                item for item in analyzed_items
-                if item.ai_score and item.ai_score >= threshold
-            ]
-            important_items.sort(key=lambda x: x.ai_score or 0, reverse=True)
+            important_items = self.select_categorized_items(
+                candidates=candidate_items,
+                threshold=threshold,
+                max_per_category=10,
+            )
 
             self.console.print(
-                f"⭐️ {len(important_items)} items scored ≥ {threshold}\n"
+                f"⭐️ {len(important_items)} categorized items selected "
+                f"(threshold ≥ {threshold}, backfill ≥ {max(0, threshold - 1)})\n"
             )
+            target_item_count = len(important_items)
 
             # 5.5 Fast local deduplication: drop obvious same-event duplicates.
             deduped_items = self.merge_similar_headline_duplicates(important_items)
@@ -123,7 +125,7 @@ class HorizonOrchestrator:
             backfilled_items = self.backfill_unique_items(
                 selected=important_items,
                 candidates=candidate_items,
-                target_count=10,
+                target_count=target_item_count,
                 min_score=max(0, threshold - 1),
             )
             if len(backfilled_items) > len(important_items):
@@ -480,6 +482,75 @@ class HorizonOrchestrator:
             selected_ids.add(candidate.id)
 
         return result
+
+    def select_categorized_items(
+        self,
+        candidates: List[ContentItem],
+        threshold: float,
+        max_per_category: int,
+    ) -> List[ContentItem]:
+        """Select a categorized briefing, capped per category."""
+        categories = [
+            "今日要闻",
+            "财经商业",
+            "AI科技",
+            "工程安全",
+            "社区趋势",
+            "游戏文化",
+        ]
+        selected_by_category: dict[str, List[ContentItem]] = {
+            category: [] for category in categories
+        }
+        selected: List[ContentItem] = []
+        min_score = max(0, threshold - 1)
+
+        for item in candidates:
+            if item.ai_score is None or item.ai_score < min_score:
+                continue
+            category = self._briefing_category(item)
+            if len(selected_by_category[category]) >= max_per_category:
+                continue
+            if any(self._looks_like_same_event(existing, item) for existing in selected):
+                continue
+            item.metadata["briefing_category"] = category
+            selected_by_category[category].append(item)
+            selected.append(item)
+
+        flattened: List[ContentItem] = []
+        for category in categories:
+            flattened.extend(selected_by_category[category])
+        return flattened
+
+    @staticmethod
+    def _briefing_category(item: ContentItem) -> str:
+        text = " ".join(
+            [
+                item.title or "",
+                item.ai_summary or "",
+                " ".join(item.ai_tags),
+                str(item.metadata.get("title_zh") or ""),
+                str(item.metadata.get("detailed_summary_zh") or ""),
+                str(item.metadata.get("category") or ""),
+                str(item.metadata.get("feed_name") or ""),
+            ]
+        ).lower()
+
+        def has(*needles: str) -> bool:
+            return any(needle.lower() in text for needle in needles)
+
+        if has("游戏", "gaming", "game", "ign", "pc gamer", "eurogamer", "gcores", "机核", "触乐"):
+            return "游戏文化"
+        if has("热榜", "社区", "v2ex", "hacker news", "product hunt", "trending", "linuxdo", "知乎", "微博", "百度热搜", "掘金"):
+            return "社区趋势"
+        if has("security", "安全", "cisa", "hacker news", "freebuf", "krebs", "schneier", "漏洞", "攻击"):
+            return "工程安全"
+        if has("github", "cloudflare", "aws", "vercel", "supabase", "react", "vue", "svelte", "astro", "next.js", "typescript", "rust", "python", "node.js", "开源", "工程博客", "编程", "developer", "developers"):
+            return "工程安全"
+        if has("ai", "人工智能", "智能体", "agent", "openai", "deepmind", "hugging face", "gemini", "llm", "模型", "算力", "数据中心"):
+            return "AI科技"
+        if has("财经", "金融", "商业", "finance", "markets", "market", "ipo", "etf", "估值", "投资", "融资", "财新", "华尔街", "coin", "crypto", "比亚迪", "softbank", "软银"):
+            return "财经商业"
+        return "今日要闻"
 
     @staticmethod
     def _headline_variants(item: ContentItem) -> List[str]:

@@ -100,18 +100,40 @@ class DailySummarizer:
 
         # TOC
         toc_entries = []
-        for i, item in enumerate(items):
-            _t = item.metadata.get(f"title_{language}") or item.title
-            t = str(_t).replace("[", "(").replace("]", ")")
-            if language == "zh":
-                t = _pangu(t)
-            score = item.ai_score or "?"
-            toc_entries.append(f"{i + 1}. [{t}](#item-{i + 1}) \u2b50\ufe0f {score}/10")
+        grouped_items = self._group_items(items)
+        item_index = 1
+        for category, category_items in grouped_items:
+            toc_entries.append(f"## {category}")
+            for item in category_items:
+                _t = item.metadata.get(f"title_{language}") or item.title
+                t = str(_t).replace("[", "(").replace("]", ")")
+                if language == "zh":
+                    t = _pangu(t)
+                score = item.ai_score or "?"
+                toc_entries.append(f"{item_index}. [{t}](#item-{item_index}) \u2b50\ufe0f {score}/10")
+                item_index += 1
         toc = "\n".join(toc_entries) + "\n\n---\n\n"
 
-        parts = [self._format_item(item, labels, language, i + 1) for i, item in enumerate(items)]
+        parts = []
+        item_index = 1
+        for category, category_items in grouped_items:
+            parts.append(f"## {category}\n\n")
+            for item in category_items:
+                parts.append(self._format_item(item, labels, language, item_index))
+                item_index += 1
 
         return header + toc + "".join(parts)
+
+    @staticmethod
+    def _group_items(items: List[ContentItem]) -> list[tuple[str, List[ContentItem]]]:
+        order = ["今日要闻", "财经商业", "AI科技", "工程安全", "社区趋势", "游戏文化"]
+        grouped: Dict[str, List[ContentItem]] = {}
+        for item in items:
+            category = str(item.metadata.get("briefing_category") or "今日要闻")
+            grouped.setdefault(category, []).append(item)
+        result = [(category, grouped.pop(category)) for category in order if grouped.get(category)]
+        result.extend((category, grouped[category]) for category in sorted(grouped))
+        return result
 
     def generate_webhook_overview(
         self,
