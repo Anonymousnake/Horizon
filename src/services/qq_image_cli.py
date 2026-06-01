@@ -317,7 +317,26 @@ async def _send_image(base_url: str, api_key: str, umo: str, image_path: Path, t
             content=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
         )
         resp.raise_for_status()
-        print(resp.text)
+        data = resp.json()
+        print(json.dumps(data, ensure_ascii=False))
+        if data.get("status") != "ok":
+            raise RuntimeError(data.get("message") or resp.text)
+
+
+async def _send_plain(base_url: str, api_key: str, umo: str, text: str) -> None:
+    headers = {"X-API-Key": api_key, "Content-Type": "application/json"}
+    payload = {"umo": umo, "message": text}
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(
+            f"{base_url.rstrip('/')}/api/v1/im/message",
+            headers=headers,
+            content=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        print(json.dumps(data, ensure_ascii=False))
+        if data.get("status") != "ok":
+            raise RuntimeError(data.get("message") or resp.text)
 
 
 def main() -> None:
@@ -341,6 +360,8 @@ def main() -> None:
         api_key = os.getenv("ASTRBOT_API_KEY")
         if not api_key:
             raise RuntimeError("ASTRBOT_API_KEY is required when --send is used")
+        if len(output_paths) > 1:
+            asyncio.run(_send_plain(args.base_url, api_key, args.umo, f"Horizon 每日速递：{len(output_paths)} 个分类"))
         for rendered_path in output_paths:
             match = re.search(r"\d{2}-(.+)\.png$", rendered_path.name)
             label = match.group(1).replace("-", " ") if match else "每日速递"
