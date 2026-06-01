@@ -62,7 +62,7 @@ class ContentAnalyzer:
                     if len(chunk) == 1:
                         await self._analyze_item(chunk[0])
                     else:
-                        await self._analyze_items(chunk)
+                        await self._analyze_items_with_fallback(chunk)
                 except Exception as e:
                     print(f"Error analyzing batch {[item.id for item in chunk]}: {e}")
                     for item in chunk:
@@ -89,6 +89,22 @@ class ContentAnalyzer:
             analyzed_chunks = await asyncio.gather(*coros)
 
         return [item for chunk in analyzed_chunks for item in chunk]
+
+    async def _analyze_items_with_fallback(self, items: List[ContentItem]) -> None:
+        """Analyze a batch, splitting it when the model rejects an oversized request."""
+        try:
+            await self._analyze_items(items)
+            return
+        except Exception as e:
+            if len(items) <= 1:
+                raise
+            midpoint = max(1, len(items) // 2)
+            print(
+                f"Batch of {len(items)} items failed ({type(e).__name__}); "
+                f"splitting into {midpoint} + {len(items) - midpoint}"
+            )
+            await self._analyze_items_with_fallback(items[:midpoint])
+            await self._analyze_items_with_fallback(items[midpoint:])
 
     def _format_item_for_prompt(self, item: ContentItem) -> str:
         content_section = ""
