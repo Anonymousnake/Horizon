@@ -365,7 +365,10 @@ def main() -> None:
         for rendered_path in output_paths:
             match = re.search(r"\d{2}-(.+)\.png$", rendered_path.name)
             label = match.group(1).replace("-", " ") if match else "每日速递"
-            asyncio.run(_send_image(args.base_url, api_key, args.umo, rendered_path, f"Horizon {label}"))
+            try:
+                asyncio.run(_send_image(args.base_url, api_key, args.umo, rendered_path, f"Horizon {label}"))
+            except Exception as exc:
+                print(f"send_failed {rendered_path}: {exc}")
 
 
 if __name__ == "__main__":
