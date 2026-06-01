@@ -197,8 +197,7 @@ def _measure_item(draw: ImageDraw.ImageDraw, item: BriefItem, fonts: dict[str, I
     return h + CARD_PAD
 
 
-def render_image(summary_path: Path, output_path: Path) -> Path:
-    title, subtitle, items = _parse_summary(summary_path)
+def _render_items_image(title: str, subtitle: str, items: list[BriefItem], output_path: Path) -> Path:
     fonts = _load_fonts()
     probe = Image.new("RGB", (WIDTH, 100), BG)
     draw = ImageDraw.Draw(probe)
@@ -270,7 +269,31 @@ def render_image(summary_path: Path, output_path: Path) -> Path:
     return output_path
 
 
-async def _send_image(base_url: str, api_key: str, umo: str, image_path: Path) -> None:
+def render_image(summary_path: Path, output_path: Path) -> Path:
+    title, subtitle, items = _parse_summary(summary_path)
+    return _render_items_image(title, subtitle, items, output_path)
+
+
+def render_category_images(summary_path: Path, output_path: Path) -> list[Path]:
+    title, subtitle, items = _parse_summary(summary_path)
+    grouped: dict[str, list[BriefItem]] = {}
+    for item in items:
+        grouped.setdefault(item.category, []).append(item)
+    if len(grouped) <= 1:
+        return [render_image(summary_path, output_path)]
+
+    outputs: list[Path] = []
+    for index, (category, category_items) in enumerate(grouped.items(), start=1):
+        safe_category = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff]+", "-", category).strip("-")
+        category_output = output_path.with_name(
+            f"{output_path.stem}-{index:02d}-{safe_category}{output_path.suffix}"
+        )
+        category_subtitle = f"{subtitle} · {category} {len(category_items)} 条"
+        outputs.append(_render_items_image(title, category_subtitle, category_items, category_output))
+    return outputs
+
+
+async def _send_image(base_url: str, api_key: str, umo: str, image_path: Path, text: str = "Horizon 每日速递") -> None:
     headers = {"X-API-Key": api_key}
     async with httpx.AsyncClient(timeout=60) as client:
         with image_path.open("rb") as fh:
@@ -284,7 +307,7 @@ async def _send_image(base_url: str, api_key: str, umo: str, image_path: Path) -
         payload = {
             "umo": umo,
             "message": [
-                {"type": "plain", "text": "Horizon 每日速递"},
+                {"type": "plain", "text": text},
                 {"type": "image", "attachment_id": attachment_id},
             ],
         }
@@ -309,14 +332,19 @@ def main() -> None:
 
     load_dotenv()
     summary_path = Path(args.summary) if args.summary else _latest_summary(Path(args.data_dir))
-    output_path = render_image(summary_path, Path(args.output))
-    print(output_path)
+    output_path = Path(args.output)
+    output_paths = render_category_images(summary_path, output_path) if args.send else [render_image(summary_path, output_path)]
+    for rendered_path in output_paths:
+        print(rendered_path)
 
     if args.send:
         api_key = os.getenv("ASTRBOT_API_KEY")
         if not api_key:
             raise RuntimeError("ASTRBOT_API_KEY is required when --send is used")
-        asyncio.run(_send_image(args.base_url, api_key, args.umo, output_path))
+        for rendered_path in output_paths:
+            match = re.search(r"\d{2}-(.+)\.png$", rendered_path.name)
+            label = match.group(1).replace("-", " ") if match else "每日速递"
+            asyncio.run(_send_image(args.base_url, api_key, args.umo, rendered_path, f"Horizon {label}"))
 
 
 if __name__ == "__main__":
