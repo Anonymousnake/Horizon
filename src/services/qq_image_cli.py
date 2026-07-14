@@ -7,7 +7,9 @@ import asyncio
 import json
 import os
 import re
+import hashlib
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
 from textwrap import shorten
 
@@ -38,6 +40,16 @@ class BriefItem:
     summary: str
     source: str
     tags: list[str]
+
+
+@dataclass
+class RenderedCard:
+    """One QQ image plus the ordered source links rendered on that image."""
+
+    card_id: str
+    category: str
+    items: list[BriefItem]
+    output_path: Path
 
 
 def _font(candidates: list[str], size: int) -> ImageFont.FreeTypeFont:
@@ -274,23 +286,123 @@ def render_image(summary_path: Path, output_path: Path) -> Path:
     return _render_items_image(title, subtitle, items, output_path)
 
 
-def render_category_images(summary_path: Path, output_path: Path) -> list[Path]:
+def _summary_date_key(summary_path: Path) -> str:
+    match = re.search(r"\d{4}-\d{2}-\d{2}", summary_path.name)
+    return match.group(0) if match else datetime.now().strftime("%Y-%m-%d")
+
+
+def _card_id(summary_path: Path, index: int, category: str, items: list[BriefItem]) -> str:
+    material = "\n".join(f"{item.title}\t{item.url}" for item in items)
+    digest = hashlib.sha256(f"{category}\n{material}".encode("utf-8")).hexdigest()[:8]
+    return f"{_summary_date_key(summary_path).replace('-', '')}-{index:02d}-{digest}"
+
+
+def render_category_cards(summary_path: Path, output_path: Path) -> list[RenderedCard]:
     title, subtitle, items = _parse_summary(summary_path)
     grouped: dict[str, list[BriefItem]] = {}
     for item in items:
         grouped.setdefault(item.category, []).append(item)
     if len(grouped) <= 1:
-        return [render_image(summary_path, output_path)]
+        category = next(iter(grouped), "daily-brief")
+        return [
+            RenderedCard(
+                card_id=_card_id(summary_path, 1, category, items),
+                category=category,
+                items=items,
+                output_path=_render_items_image(title, subtitle, items, output_path),
+            ),
+        ]
 
-    outputs: list[Path] = []
+    cards: list[RenderedCard] = []
     for index, (category, category_items) in enumerate(grouped.items(), start=1):
         safe_category = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff]+", "-", category).strip("-")
         category_output = output_path.with_name(
             f"{output_path.stem}-{index:02d}-{safe_category}{output_path.suffix}"
         )
         category_subtitle = f"{subtitle} · {category} {len(category_items)} 条"
-        outputs.append(_render_items_image(title, category_subtitle, category_items, category_output))
-    return outputs
+        cards.append(
+            RenderedCard(
+                card_id=_card_id(summary_path, index, category, category_items),
+                category=category,
+                items=category_items,
+                output_path=_render_items_image(title, category_subtitle, category_items, category_output),
+            ),
+        )
+    return cards
+
+
+def render_category_images(summary_path: Path, output_path: Path) -> list[Path]:
+    """Backward-compatible path-only API used by external callers."""
+    return [card.output_path for card in render_category_cards(summary_path, output_path)]
+
+
+def _group_id_from_umo(umo: str) -> str:
+    parts = umo.rsplit(":", 1)
+    return parts[-1].strip() if len(parts) == 2 and ":GroupMessage:" in umo else ""
+
+
+def _card_manifest_path(summary_path: Path) -> Path:
+    return summary_path.parent / f"horizon-link-cards-{_summary_date_key(summary_path)}.json"
+
+
+def _write_link_card_manifest(summary_path: Path, cards: list[RenderedCard], umo: str) -> Path:
+    """Persist the exact source URLs shown on each sent image for reply lookups."""
+    manifest_path = _card_manifest_path(summary_path)
+    previous_cards: list[dict[str, object]] = []
+    if manifest_path.exists():
+        try:
+            old = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if isinstance(old, dict) and isinstance(old.get("cards"), list):
+                previous_cards = [card for card in old["cards"] if isinstance(card, dict)]
+        except (OSError, json.JSONDecodeError):
+            pass
+
+    group_id = _group_id_from_umo(umo)
+    current_cards = [
+        {
+            "card_id": card.card_id,
+            "group_id": group_id,
+            "category": card.category,
+            "summary_file": summary_path.name,
+            "image_file": card.output_path.name,
+            "items": [
+                {"index": index, "title": item.title, "url": item.url}
+                for index, item in enumerate(card.items, start=1)
+            ],
+        }
+        for card in cards
+    ]
+    current_ids = {str(card["card_id"]) for card in current_cards}
+    payload = {
+        "version": 1,
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "cards": [card for card in previous_cards if str(card.get("card_id") or "") not in current_ids] + current_cards,
+    }
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = manifest_path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    temporary.replace(manifest_path)
+    _cleanup_old_link_card_manifests(manifest_path.parent)
+    return manifest_path
+
+
+def _cleanup_old_link_card_manifests(directory: Path) -> None:
+    retention_days = max(1, int(os.getenv("HORIZON_LINK_CARD_RETENTION_DAYS", "14")))
+    cutoff = datetime.now() - timedelta(days=retention_days)
+    for path in directory.glob("horizon-link-cards-*.json"):
+        try:
+            if datetime.fromtimestamp(path.stat().st_mtime) < cutoff:
+                path.unlink()
+        except OSError:
+            continue
+
+
+def _caption_for_card(card: RenderedCard) -> str:
+    return (
+        f"Horizon {card.category}\n"
+        "回复本条发送序号获取原文链接，例如：1 3 5\n"
+        f"[HZN:{card.card_id}]"
+    )
 
 
 async def _send_image(base_url: str, api_key: str, umo: str, image_path: Path, text: str = "Horizon 每日速递") -> None:
@@ -352,7 +464,8 @@ def main() -> None:
     load_dotenv()
     summary_path = Path(args.summary) if args.summary else _latest_summary(Path(args.data_dir))
     output_path = Path(args.output)
-    output_paths = render_category_images(summary_path, output_path) if args.send else [render_image(summary_path, output_path)]
+    cards = render_category_cards(summary_path, output_path) if args.send else []
+    output_paths = [card.output_path for card in cards] if args.send else [render_image(summary_path, output_path)]
     for rendered_path in output_paths:
         print(rendered_path)
 
@@ -360,15 +473,15 @@ def main() -> None:
         api_key = os.getenv("ASTRBOT_API_KEY")
         if not api_key:
             raise RuntimeError("ASTRBOT_API_KEY is required when --send is used")
-        if len(output_paths) > 1:
-            asyncio.run(_send_plain(args.base_url, api_key, args.umo, f"Horizon 每日速递：{len(output_paths)} 个分类"))
-        for rendered_path in output_paths:
-            match = re.search(r"\d{2}-(.+)\.png$", rendered_path.name)
-            label = match.group(1).replace("-", " ") if match else "每日速递"
+        manifest_path = _write_link_card_manifest(summary_path, cards, args.umo)
+        print(f"link_card_manifest={manifest_path}")
+        if len(cards) > 1:
+            asyncio.run(_send_plain(args.base_url, api_key, args.umo, f"Horizon 每日速递：{len(cards)} 个分类"))
+        for card in cards:
             try:
-                asyncio.run(_send_image(args.base_url, api_key, args.umo, rendered_path, f"Horizon {label}"))
+                asyncio.run(_send_image(args.base_url, api_key, args.umo, card.output_path, _caption_for_card(card)))
             except Exception as exc:
-                print(f"send_failed {rendered_path}: {exc}")
+                print(f"send_failed {card.output_path}: {exc}")
 
 
 if __name__ == "__main__":
